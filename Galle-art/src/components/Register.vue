@@ -22,33 +22,36 @@
 </template>
   
 <script>
+import axios from 'axios';
+
 export default {
-    data() {
-        return {
-            username: '',
-            email: '',
-            password: '',
-            errorMessage: '',
-        };
-    },
-    methods: {
-  register() {
-    if (!this.username || !this.email || !this.password) {
-      this.errorMessage = 'Por favor, rellena todos los campos.';
-    } else {
-      const user = {
-        name: this.username,
-        email: this.email,
-        password: this.password,
-      };
-
-      const userJson = JSON.stringify(user);
-
-      localStorage.setItem('user', userJson);
-
-      this.$router.push('/login');
-    }
+  data() {
+    return {
+      username: '',
+      email: '',
+      password: '',
+      errorMessage: '',
+    };
   },
-},
+  methods: {
+    async register() {
+      if (!this.username || !this.email || !this.password) {
+        this.errorMessage = 'Por favor, rellena todos los campos.';
+      } else {
+        try {
+          await axios.post('http://localhost:3000/auth/register', {
+            name: this.username,
+            email: this.email,
+            password: this.password,
+          });
+
+          // Redirigir al usuario a la página de inicio de sesión
+          this.$router.push('/login');
+        } catch (error) {
+          this.errorMessage = 'Hubo un error al crear tu cuenta. Por favor, inténtalo de nuevo.';
+        }
+      }
+    },
+  },
 };
 </script>

@@ -5,8 +5,8 @@
         </div>
     </nav>
 
-    <div class="d-flex justify-content-start">
-        <div class="q-card card p-3 ms-1 mt-1 ">
+    <div class="d-flex flex-row">
+        <div class="card p-3 ms-1 mt-1 ">
             <div class="my-3" id="search-bar">
                 <input type="text" id="search" placeholder="Buscar usuario">
             </div>
@@ -24,20 +24,20 @@
             </div>
         </div>
 
-        <div class="q-card p-5 ms-3 mt-1">
-            <div id="upload-section">
+        <div class="d-flex flex-column">
+            <div class="q-card p-5 ms-3 mt-1">
                 <h2>Subir nueva publicación</h2>
-                <input type="file" id="new-publication" name="new-publication">
+                <input type="file" id="new-publication" name="new-publication" ref="fileInput">
+                <button @click="handleFileUpload">Subir imagen</button>
+                <p v-if="uploading">Subiendo imagen...</p>
             </div>
-        </div>
 
-        <div id="upload-section">
-            <h2>Subir nueva publicación</h2>
-            <input type="file" id="new-publication" name="new-publication" @change="handleFileUpload">
-        </div>
-
-        <div id="image-list">
-            <img v-for="image in images" :src="image" alt="Uploaded image">
+            <div class="q-card mx-3" id="image-list">
+                <div v-for="image in images">
+                    <img :src="image.artwork" alt="Uploaded image">
+                    <button @click="deleteArtWork(image._id)">Borrar</button>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -53,6 +53,31 @@
     font-size: x-large;
 }
 
+.q-card{
+    width: calc(100% - 40px);
+    margin: 40px;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.flex-row {
+    flex-direction: row;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.d-flex.flex-column {
+    flex-grow: 1;
+}
+
+.d-flex.flex-column > .q-card {
+    flex-grow: 1;
+}
+
 label,
 h2 {
     color: black;
@@ -60,31 +85,44 @@ h2 {
 </style>
 
 <script>
+import axios from 'axios';
+
 export default {
     data() {
         return {
             images: [],
+            uploading: false,
         };
     },
     methods: {
-        handleFileUpload(event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
+        async handleFileUpload() {
+            const file = this.$refs.fileInput.files[0];
+            if (!file) {
+                return;
+            }
 
-            reader.onload = (e) => {
-                this.images.push(e.target.result);
+            this.uploading = true;
 
-                const imagesJson = JSON.stringify(this.images);
+            const formData = new FormData();
+            formData.append('image', file);
 
-                localStorage.setItem('images', imagesJson);
-            };
+            const response = await axios.post('/artWorks', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
 
-            reader.readAsDataURL(file);
+            this.images.push(response.data.artwork);
+            this.uploading = false;
+        },
+        async deleteArtWork(id) {
+            await axios.delete(`/artWorks/${id}`);
+            this.images = this.images.filter(image => image._id !== id);
         },
     },
-    mounted() {
-        const imagesJson = localStorage.getItem('images');
-        this.images = JSON.parse(imagesJson) || [];
+    async mounted() {
+        const response = await axios.get('/artWorks');
+        this.images = response.data.artworks;
     },
 };
 </script>

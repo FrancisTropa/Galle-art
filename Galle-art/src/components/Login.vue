@@ -22,6 +22,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -31,16 +33,18 @@ export default {
     };
   },
   methods: {
-    login() {
+    async login() {
       if (!this.email || !this.password) {
         this.errorMessage = 'Por favor, rellena todos los campos.';
       } else {
-        const userJson = localStorage.getItem('user');
-        const user = JSON.parse(userJson);
-
-        if (user.email === this.email && user.password === this.password) {
+        try {
+          const response = await axios.post('http://localhost:3000/auth/login', {
+            "email": this.email,
+            "password": this.password,
+          });
+          localStorage.setItem('token', response.data.token);
           this.$router.push('/index');
-        } else {
+        } catch (error) {
           this.errorMessage = 'Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.';
         }
       }
