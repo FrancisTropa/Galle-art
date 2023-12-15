@@ -1,4 +1,4 @@
-# Avance 1 Galle-art
+# Galle-art
 
 ## Integrantes
 - Francisco Tropa
